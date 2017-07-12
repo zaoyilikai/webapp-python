@@ -21,8 +21,7 @@ def get(path):
         @functools.wraps(func)
         def wrapper(*args, **kw):
             return func(*args, **kw)
-
-        wrapper.__mothod__ = 'GET'
+        wrapper.__method__ = 'GET'
         wrapper.__path__ = path
         return wrapper
     return decorator
@@ -70,7 +69,7 @@ def has_named_kw_args(fn):
 
 def has_var_kw_arg(fn):
     params = inspect.signature(fn).parameters
-    for name, param in params:
+    for name, param in params.items():
         if param.kind == inspect.Parameter.VAR_KEYWORD:
             return True
 
@@ -79,13 +78,14 @@ def has_request_arg(fn):
     sig = inspect.signature(fn)
     params = sig.parameters
     found = False
-    for name, param in params:
+    for name, param in params.items():
+        logging.info('name: %s, param: %s' % (name, param))
         if name == 'request':
             found = True
             continue
-        if found  and (param.kind != inspect.Parameter.VAR_POSITIONAL and param.kind != inspect.Parameter.KEYWORD_ONLY and param.kind != inspect.Parameter.VAR_KEYWORD):
+        if found and (param.kind != inspect.Parameter.VAR_POSITIONAL and param.kind != inspect.Parameter.KEYWORD_ONLY and param.kind != inspect.Parameter.VAR_KEYWORD):
             raise ValueError('request parameter must be the last named paramter in function: %s%s' % (fn.__name__, str(sig)))
-        return found
+    return found
 
 
 class RequestHandler(object):
@@ -118,7 +118,7 @@ class RequestHandler(object):
                 else:
                     return web.HTTPBadRequest('Unsupported Content-Type: %s' %request.content_type)
             if request.method == 'GET':
-                qs = request.query_string()
+                qs = request.query_string
                 if qs:
                     kw = dict()
                     for k, v in parse.parse_qs(qs, True).items():
@@ -147,7 +147,7 @@ class RequestHandler(object):
                     return web.HTTPBadRequest('Missing argument: %s' % name)
         logging.info('call with args: %s' % str(kw))
         try:
-            r  = await self._func(**kw)
+            r = await self._func(**kw)
             return r
         except APIError as e:
             return dict(error=e.error, data=e.data, message=e.message)
@@ -161,7 +161,7 @@ def add_static(app):
 
 def add_route(app, fn):
     method = getattr(fn, '__method__', None)
-    path = getattr(fn, '__route__', None)
+    path = getattr(fn, '__path__', None)
     if path is None or method is None:
         raise ValueError('@get or @post not defind in %s.' % str(fn))
     if not asyncio.iscoroutinefunction(fn) and not inspect.isgeneratorfunction(fn):
@@ -182,7 +182,7 @@ def add_routes(app, module_name):
             continue
         fn = getattr(mod, attr)
         if callable(fn):
-            method = getattr(fn, '__mothod__', None)
-            path = getattr(fn, '__route__', None)
+            method = getattr(fn, '__method__', None)
+            path = getattr(fn, '__path__', None)
             if method and path:
                 add_route(app, fn)

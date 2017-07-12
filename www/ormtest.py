@@ -12,7 +12,7 @@ async def test_create(loop):
 
 
 async def test_insert():
-    user = User(name='Test', email='test6@example.com', passwd='123123', image='about:blank', admin=False)
+    user = User(name='Test', email='test@example.com', passwd='123123', image='about:blank', admin=False)
     await user.save()
 
 async def test_select():
@@ -35,6 +35,6 @@ async def test_delete():
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(test_create(loop))
-loop.run_until_complete(test_delete())
+loop.run_until_complete(test_insert())
 loop.run_until_complete(orm.destory_conn_pool())
 loop.close()

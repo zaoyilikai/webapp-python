@@ -20,7 +20,7 @@ from aiohttp import web
 from jinja2 import Environment, FileSystemLoader
 from coreweb import add_routes, add_static
 
-favicon.ico
+
 def init_jinja2(app, **kw):
     logging.info('init jinja2 ...')
     options = dict(autoescape = kw.get('autoescape', True),
@@ -86,7 +86,7 @@ async def response_factory(app, handler):
                 return resp
             else:
                 resp = web.Response(body=app['__templating__'].get_template(template).render(**r).encode('utf-8'))
-                resp.content_type = 'application/html;charset=utf-8'
+                resp.content_type = 'text/html;charset=utf-8'
                 return resp
         if isinstance(r, int) and r >= 100 and r < 600:
             return web.Response(r)
@@ -114,14 +114,13 @@ def datetime_filter(t):
     return u'%年%月%日' % (dt.year, dt.month, dt.day)
 
 
-
 async def init(loop):
     await orm.create_conn_pool(loop, user='webapp', password='password', db='webapp')
-    app = web.Application(loop = loop, middlewares=[logger_factory, response_factory])
+    app = web.Application(loop=loop, middlewares=[logger_factory, response_factory])
     init_jinja2(app, filters=dict(datetime=datetime_filter))
     add_routes(app, 'handlers')
     add_static(app)
-    srv = await loop.create_server(app.make_handler(),'127.0.0.1',9090)
+    srv = await loop.create_server(app.make_handler(), '127.0.0.1', 9090)
     logging.info('server started at htttp://127.0.0.1:9090...')
     return srv
 

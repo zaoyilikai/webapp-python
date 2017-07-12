@@ -14,7 +14,7 @@ import functools
 
 
 class APIError(Exception):
- 	"""
+    """
      The base APIError which contains error(required), data(optional) and message(optional).
     """
     def __init__(self, error, data='', message=''):

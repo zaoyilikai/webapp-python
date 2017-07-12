@@ -51,6 +51,4 @@ try:
 except ImportError:
     pass
 
-print(configs['debug'])
 configs = toDict(configs)
-print(configs.debug)
